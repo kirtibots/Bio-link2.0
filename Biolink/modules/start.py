@@ -10,12 +10,12 @@ START_IMG = "https://files.catbox.moe/gdjna3.jpg"
 
 def get_start_caption(user):
     return f"""
-**ʜᴇʏ** {user.mention} 🥀
+***ʜᴇʏ {user.mention} 🥀
 
-🤖 I am a **Link Remover Bot**.
-I delete messages with links and restrict users who have links in their bio.
+🤖 ɪ ᴧϻ ᴧ ʟɪηᴋ Ꝛєϻσᴠєꝛ ʙσᴛ.
+ɪ ᴅєʟєᴛє ϻєssᴧɢєs ᴡɪᴛʜ ʟɪηᴋs ᴧηᴅ ꝛєsᴛꝛɪᴄᴛ υsєꝛs ᴡʜσ ʜᴧᴠє ʟɪηᴋs ɪη ᴛʜєɪꝛ ʙɪσ.
 
-🚫 I also delete messages with **biolink**.
+🚫 ɪ ᴧʟsσ ᴅєʟєᴛє ϻєssᴧɢєs ᴡɪᴛʜ ʙɪσʟɪηᴋ.
 """
 
 START_BUTTONS = InlineKeyboardMarkup([
