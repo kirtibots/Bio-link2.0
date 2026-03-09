@@ -22,10 +22,10 @@ START_BUTTONS = InlineKeyboardMarkup([
     [InlineKeyboardButton("• 𝗔𝗗𝗗 𝗠𝗘 𝗕𝗔𝗕𝗬 •", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")],
     [InlineKeyboardButton("• 𝗛𝗘𝗟𝗣 𝗔𝗡𝗗 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 •", callback_data="show_help")],
     [
-        InlineKeyboardButton("• 𝗦𝗨𝗣𝗣𝗢𝗥𝗧 •", url="https://t.me/+_zR_OAMZ6iE2YTBl"),
-        InlineKeyboardButton("• 𝗨𝗣𝗗𝗔𝗧𝗘 •", url="https://t.me/bot_x_worlds")
+        InlineKeyboardButton("• 𝗦𝗨𝗣𝗣𝗢𝗥𝗧 •", url="https://t.me/kirti_supprot_group"),
+        InlineKeyboardButton("• 𝗨𝗣𝗗𝗔𝗧𝗘 •", url="https://t.me/Kirti_update")
     ],
-    [InlineKeyboardButton("• 𝗢𝗪𝗡𝗘𝗥 •", url="https://t.me/PerfectselIer")]
+    [InlineKeyboardButton("• 𝗢𝗪𝗡𝗘𝗥 •", url="https://t.me/Kirti_update")]
 ])
 
 PRIVATE_START_BUTTON = InlineKeyboardMarkup([
