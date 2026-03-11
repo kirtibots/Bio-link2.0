@@ -10,7 +10,7 @@ API_ID = int(os.getenv("API_ID", "21692000"))
 API_HASH = os.getenv("API_HASH", "1e37856155373adf855c061c49847ced")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
-BOT_USERNAME = os.getenv("BOT_USERNAME", "YourBotUsername")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "Biolinkkirtibot")
 
 # ---------------- DATABASE ----------------
 MONGO_URL = os.getenv("MONGO_URL", "")
