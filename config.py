@@ -3,6 +3,7 @@
 #  ─────────────────────────────────────
 
 import os
+from config import BOT_USERNAME
 
 # ---------------- BOT INFO ----------------
 API_ID = int(os.getenv("API_ID", "21692000"))
@@ -16,7 +17,7 @@ MONGO_URL = os.getenv("MONGO_URL", "")
 
 # ---------------- LOGS ----------------
 LOG_GROUP = int(os.getenv("LOG_GROUP", "-1003670001038"))
-OTHER_LOGS = int(os.getenv("OTHER_LOGS", "-1003670001038"))
+OTHER_LOGS = int(os.getenv("OTHER_LOGS", "-1003315572386"))
 
 # ---------------- CHANNELS ----------------
 SUPPORT_CHAT = os.getenv("SUPPORT_CHAT", "https://t.me/Kirti_update")
