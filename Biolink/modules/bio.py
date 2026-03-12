@@ -1,72 +1,95 @@
 import re
 import asyncio
-from pyrogram import filters, enums, errors
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram import filters, enums
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from Biolink import Biolink as app
 from motor.motor_asyncio import AsyncIOMotorClient
 from config import MONGO_URL, OTHER_LOGS, BOT_USERNAME
 from Biolink.helper.auth import get_auth_users
 
 
-# ----------------- MongoDB -----------------
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ✦ ᴍᴏɴɢᴏᴅʙ sᴇᴛᴜᴘ
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 mongo = AsyncIOMotorClient(MONGO_URL)
 db = mongo["BioFilterBot"]
 bio_filter = db["bio_filter"]
 
 
-# ----------------- Regex -----------------
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ✦ ʀᴇɢᴇx ᴘᴀᴛᴛᴇʀɴ
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 URL_PATTERN = re.compile(r"(https?://|www\.)\S+", re.IGNORECASE)
 USERNAME_PATTERN = re.compile(r"@[\w_]+", re.IGNORECASE)
 
 
-# ----------------- Filter Status -----------------
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ✦ ғɪʟᴛᴇʀ sᴛᴀᴛᴜs
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 async def is_enabled(chat_id: int) -> bool:
     data = await bio_filter.find_one({"chat_id": chat_id})
-    if not data:
-        return False
-    return data.get("enabled", False)
+    return data.get("enabled", False) if data else False
 
 
 async def set_enabled(chat_id: int, status: bool):
     await bio_filter.update_one(
         {"chat_id": chat_id},
         {"$set": {"enabled": status}},
-        upsert=True,
+        upsert=True
     )
 
 
-# ----------------- Admin Check -----------------
-async def is_admins(client, chat_id, user_id):
-    async for member in client.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
-        if member.user.id == user_id:
-            return True
-    return False
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ✦ ᴀᴅᴍɪɴ ᴄʜᴇᴄᴋ
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async def is_admin(client, chat_id, user_id):
+    try:
+        member = await client.get_chat_member(chat_id, user_id)
+        return member.status in [
+            enums.ChatMemberStatus.ADMINISTRATOR,
+            enums.ChatMemberStatus.OWNER,
+        ]
+    except:
+        return False
 
 
-# ----------------- Enable / Disable Commands -----------------
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ✦ /ʙɪᴏʟɪɴᴋ ᴄᴏᴍᴍᴀɴᴅ
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 @app.on_message(filters.command("biolink") & filters.group)
-async def bl_cmd(client, message):
-    if not await is_admins(client, message.chat.id, message.from_user.id):
-        return await message.reply_text("Only admins can use this command.")
+async def bio_command(client, message):
+
+    if not await is_admin(client, message.chat.id, message.from_user.id):
+        return await message.reply_text("❌ **Only admins can use this command.**")
 
     if len(message.command) < 2:
         return await message.reply_text(
-            "**Usage:**\n`/biolink on`\n`/biolink off`"
+            "**Usage :**\n`/biolink on`\n`/biolink off`"
         )
 
     state = message.command[1].lower()
 
     if state == "on":
         await set_enabled(message.chat.id, True)
-        return await message.reply_text("✅ Bio Link Filter **Enabled**.")
+        await message.reply_text("✅ **ʙɪᴏ ʟɪɴᴋ ғɪʟᴛᴇʀ ᴇɴᴀʙʟᴇᴅ**")
+
     elif state == "off":
         await set_enabled(message.chat.id, False)
-        return await message.reply_text("❌ Bio Link Filter **Disabled**.")
+        await message.reply_text("❌ **ʙɪᴏ ʟɪɴᴋ ғɪʟᴛᴇʀ ᴅɪsᴀʙʟᴇᴅ**")
+
     else:
-        return await message.reply_text("Use: `/biolink on` or `/biolink off`")
+        await message.reply_text("Use : `/biolink on` or `/biolink off`")
 
 
-# ----------------- Main Bio Filter -----------------
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ✦ ᴍᴀɪɴ ʙɪᴏ ғɪʟᴛᴇʀ
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 @app.on_message(filters.group & filters.text)
 async def bio_filter_handler(client, message):
 
@@ -76,66 +99,67 @@ async def bio_filter_handler(client, message):
     if not user:
         return
 
-    # Filter disabled
     if not await is_enabled(chat_id):
         return
 
-    # Admin ignore
-    if await is_admins(client, chat_id, user.id):
+    if await is_admin(client, chat_id, user.id):
         return
 
-    # Auth ignore
     auth_data = await get_auth_users(chat_id)
     if user.id in auth_data.get("auth_users", []):
         return
 
-    # Get bio
     try:
         user_info = await client.get_chat(user.id)
         bio = getattr(user_info, "bio", "") or ""
     except:
         bio = ""
 
-    # No bio
     if not bio:
         return
 
-    # Check if bio contains link OR username tag
-    if not (re.search(URL_PATTERN, bio) or re.search(USERNAME_PATTERN, bio)):
+    if not (URL_PATTERN.search(bio) or USERNAME_PATTERN.search(bio)):
         return
 
-    # ----------------- Delete message -----------------
+
     try:
         await message.delete()
     except:
         pass
 
+
     mention = f"[{user.first_name}](tg://user?id={user.id})"
     username = f"@{user.username}" if user.username else "None"
 
-    # ----------------- Warn User -----------------
+
     try:
         warn = await message.reply_text(
-            f"⚠️ {mention}, **bio me link/username allowed nahi hai!**",
+            f"⚠️ {mention}\n\n**ʙɪᴏ ᴍᴇ ʟɪɴᴋ / ᴜsᴇʀɴᴀᴍᴇ ᴀʟʟᴏᴡᴇᴅ ɴᴀʜɪ ʜᴀɪ !**",
             parse_mode=enums.ParseMode.MARKDOWN,
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("Close", callback_data="close")]]
+                [[InlineKeyboardButton("❌ ᴄʟᴏsᴇ", callback_data="close")]]
             ),
         )
+
         await asyncio.sleep(10)
         await warn.delete()
+
     except:
         pass
 
-    # ----------------- Send Log -----------------
+
     log_text = f"""
-**🚨 Bio Filter Alert**
-**User:** {mention}
-**Username:** {username}
-**User ID:** `{user.id}`
-**Group:** `{message.chat.title}`
-**Chat ID:** `{chat_id}`
-**Bio:** `{bio}`
+🚨 **ʙɪᴏ ғɪʟᴛᴇʀ ᴀʟᴇʀᴛ**
+
+👤 **user :** {mention}
+🔗 **username :** {username}
+🆔 **user id :** `{user.id}`
+
+👥 **group :** {message.chat.title}
+💬 **chat id :** `{chat_id}`
+
+📄 **bio :**
+`{bio}`
 """
 
     try:
@@ -143,8 +167,20 @@ async def bio_filter_handler(client, message):
             OTHER_LOGS,
             log_text,
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("Add Bot", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")]]
+                [[InlineKeyboardButton("➕ ᴀᴅᴅ ʙᴏᴛ", url=f"https://t.me/{BOT_USERNAME}?startgroup=true")]]
             ),
         )
+    except:
+        pass
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ✦ ᴄʟᴏsᴇ ʙᴜᴛᴛᴏɴ
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@app.on_callback_query(filters.regex("close"))
+async def close_button(_, query: CallbackQuery):
+    try:
+        await query.message.delete()
     except:
         pass
